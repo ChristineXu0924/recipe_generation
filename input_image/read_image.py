@@ -5,7 +5,6 @@ from openai import OpenAI
 
 # masking the api key just for security reasons
 # api_key = "sk-LXA0*****************************DCQHpz"
-api_key = "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"
 
 def encode_image(image_path):
     with open(image_path, "rb") as image_file:

@@ -27,5 +27,5 @@ foodcom = pd.read_csv(foodcom_path, compression='zip', header=0, sep=',', quotec
 combined_foodcom = foodcom.merge(nlg_foodcom, left_on = 'id', right_on = "id", how='inner')
 combined_foodcom['ingredients_x'] = combined_foodcom['ingredients_x'].apply(lambda x:ast.literal_eval(x))
     
-    # return combined_foodcom 
+#     return combined_foodcom 
 

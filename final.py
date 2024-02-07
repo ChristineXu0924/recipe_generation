@@ -34,21 +34,38 @@ def read_data():
 
 
 def main():
+    condiments = ['salt', 'pepper']
+    
     print("Please input the photo of your available ingredeints!")
 #     photo = raw_input()
+    
+    # mock image input
     photo = 'image1.jpg'
     out = read_image.ingredient_identifier(photo)
-    query = json.loads(out['choices'][0]['message']['content'].strip('` \n').strip('json\n'))['ingredients']
+    available_lst = json.loads(out['choices'][0]['message']['content'].strip('` \n').strip('json\n'))['ingredients']
     
+    # join ingredients
+    ingredients = ', '.join(available_lst)
+    
+    for i in condiments:
+        if i not in ingredients:
+            ingredients += ', '+ i 
+    
+    # load recipe data
     recipe = data.combined_foodcom
     
+    # build corpus
     input_text = []
     for i in recipe['ingredients_x']:
         input_text.append(', '.join(i))
         
     corpus = input_text
     
-    similarity = search_engine.search(query, corpus)
+    # start search
+    # ingredients = 'pasta, olive oil, tomato sauce, chedder cheese, mushrooms, zucchini, chicken, onion, garlic'
+    
+    similarity = search_engine.search(ingredients, corpus)
+    
     recipe['score'] = similarity 
     recipe = recipe.sort_values(by='score', ascending=False)[:8]
 

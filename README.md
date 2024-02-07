@@ -17,7 +17,8 @@ The goal of this project is to provide users with a list of recipes and they can
 ### Running the Application
 
 ### Code Credit
-We utilized preexisting code from many sources, including:
-- 
+We utilized preexisting code and models from many sources, including:
+- GPT4 with Vision (https://platform.openai.com/docs/guides/vision)
+- Streamlit app template (https://github.com/dataprofessor/openai-chatbot)
 
 

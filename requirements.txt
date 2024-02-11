@@ -1,6 +1,5 @@
 streamlit
 openai
-base64
 PIL
 requests
 io

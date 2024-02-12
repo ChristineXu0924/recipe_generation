@@ -10,7 +10,7 @@ The goal of this project is to provide users with a list of recipes and they can
 # How this Repo is Constructed
 
 ### Folders
-- Data: the code for data preprocessing 
+- Data: the code for data preprocessing. For now, please download the original data from: https://drive.google.com/drive/folders/1xpnS0K3ecIbtySb0AxIhGMr7YiuI8_JP?usp=drive_link, and paste them into the data folder after cloning this repository. 
 - input_image: contains the code for input image preprocessing. Currenly out of privacy concern, we masked our openai API key.  
 - search: contains the code for our recipe search component
 

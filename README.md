@@ -1,5 +1,5 @@
 # UCSD DSC Capstone Project: PicToPlate
-
+link to static github website: https://christinexu0924.github.io/recipe_retrieval/
 ### Authors
 Megan Huynh (mlhuynh@ucsd.edu)
 Christine Xu (jix028@ucsd.edu)

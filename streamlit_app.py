@@ -12,7 +12,7 @@ import requests
 from PIL import Image
 from io import BytesIO
 from input_image import read_image
-from data import data
+
 import json
 import sqlite3
 

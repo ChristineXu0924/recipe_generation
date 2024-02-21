@@ -64,10 +64,13 @@ if uploaded_file is not None:
 
         # response = requests.post("https://api.openai.com/v1/chat/completions", json=payload, headers=headers)
         response = read_image.ingredient_identifier(image_base64, 'streamlit', openai_api_key)
-        if response.status_code == 200:
-            st.json(response.json())
-        else:
-            st.error(f"Error in API response: {response.status_code}")
+        ing = json.loads(response['choices'][0]['message']['content'].strip('` \n').strip('json\n'))['ingredients']
+        st.write(ing)
+        
+        # if response.status_code == 200:
+        #     st.json(response.json())
+        # else:
+        #     st.error(f"Error in API response: {response.status_code}")
 
 ##----------------------------------------------------
 

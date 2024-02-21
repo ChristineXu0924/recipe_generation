@@ -1,16 +1,20 @@
 # Code refactored from https://docs.streamlit.io/knowledge-base/tutorials/build-conversational-apps
 # pip install -r requirements.txt
+# <div class="primary-image svelte-wgcq7z"> image source
 
 import streamlit as st
 import openai
 from openai import OpenAI
+from langchain.llms import OpenAI as openai_llm
 import numpy as np
 import base64
 import requests
 from PIL import Image
 from io import BytesIO
 from input_image import read_image
+from data import data
 import json
+import sqlite3
 
 # create website sidebar, with api_key input and filters/sort
 with st.sidebar:
@@ -88,7 +92,6 @@ if uploaded_file is not None:
     if uploaded_file and not openai_api_key:
         st.info("Please add your OpenAI API key to continue.")
 
-
     # User clicks the button to start processing
     if st.button('Identify Ingredients') and openai_api_key:
         headers = {
@@ -99,7 +102,11 @@ if uploaded_file is not None:
         # response = requests.post("https://api.openai.com/v1/chat/completions", json=payload, headers=headers)
         response = read_image.ingredient_identifier(image_base64, 'streamlit', openai_api_key)
         ing = json.loads(response['choices'][0]['message']['content'].strip('` \n').strip('json\n'))['items']
-        st.write(ing)
+        ing_message = 'Looks like we have ' + ', '.join(ing) + ' available.'
+        # st.write(ing_message)
+
+        st.session_state["messages"] = [{"role": "assistant", "content": ing_message}]
+
         
         # if response.status_code == 200:
         #     st.json(response.json())
@@ -107,6 +114,8 @@ if uploaded_file is not None:
         #     st.error(f"Error in API response: {response.status_code}")
 
 ##----------------------------------------------------
+# TODO: create a function to retrieve the data from the database
+
 
 
                 
@@ -118,27 +127,32 @@ if uploaded_file is not None:
 # TODO: write the RAG in separated file and import here. How to deal with filters?
         
 
-##----------------------------------------------------
-
-#################### 
-
-# # TODO: create separated menu? for the interactive guiding page
+# TODO: create separated menu? for the interactive guiding page
 
 
 
 for msg in st.session_state.messages:
     st.chat_message(msg["role"]).write(msg["content"])
 
+
 if prompt := st.chat_input():
     if not openai_api_key:
         st.info("Please add your OpenAI API key to continue.")
         st.stop()
 
+
+def generate_response(input_text):
+    llm = openai_llm(temperature=0.7, openai_api_key=openai_api_key)
+    st.info(llm(input_text))
+
+
+# TODO: connect to database, retrieve the data and display the result. scrap picture too.
+    
     client = OpenAI(api_key=openai_api_key)
 
     st.session_state.messages.append({"role": "user", "content": prompt})
     st.chat_message("user").write(prompt)
-    response = client.chat.completions.create(model="gpt-4-vision-preview", messages=st.session_state.messages)
+    response = client.chat.completions.create(model="gpt-3.5-turbo", messages=st.session_state.messages)
     msg = response.choices[0].message.content
     st.session_state.messages.append({"role": "assistant", "content": msg})
     st.chat_message("assistant").write(msg)

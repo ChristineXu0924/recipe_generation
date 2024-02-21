@@ -1,3 +1,7 @@
 /* FILEPATH: style.css */
-
+.hero-title {
+    font-size: 5rem;
+    text-align: center;
+    font-family: "Georgia";
+}
 /* Add your CSS styles here */

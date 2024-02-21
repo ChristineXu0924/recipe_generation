@@ -1,6 +1,8 @@
 # Code refactored from https://docs.streamlit.io/knowledge-base/tutorials/build-conversational-apps
 # pip install -r requirements.txt
 
+#TODO: move filters to side bar
+
 import streamlit as st
 import openai
 from openai import OpenAI
@@ -10,11 +12,13 @@ import requests
 from PIL import Image
 from io import BytesIO
 from input_image import read_image
+import json
 
 # create website sidebar
 with st.sidebar:
     openai_api_key = st.text_input("OpenAI API Key", key="chatbot_api_key", type="password")
     "[Get an OpenAI API key](https://platform.openai.com/account/api-keys)"
+
 
 # create page header
 st.header(':cook: PicToPlate', divider='rainbow')
@@ -23,7 +27,7 @@ st.header(':cook: PicToPlate', divider='rainbow')
 st.subheader("Welcome to PicToPlate! Cooking at home has never been easier.")
 
 #introduction to product
-st.markdown('PicToPlate is an innovative application that allows home chefs to input an image of ingredients \
+st.markdown('PicToPlate is an innovation application that allows home chefs to input an image of ingredients \
             they have, and PicToPlate will return a list of recipes they can cook using what they already have. \
             To get started, follow the instructions below.')
 
@@ -32,8 +36,10 @@ st.caption(":shallow_pan_of_food: A cooking assistant powered by OpenAI LLM")
 
 #default on screen message
 if "messages" not in st.session_state:
-    st.session_state["messages"] = [{"role": "assistant", "content": "Please identify all the ingredients in the image and respond in json format with the list of items."}]
+    st.session_state["messages"] = [{"role": "assistant", "content": "Please identify all the food ingredients in the image, response in json format with the list of items."}]
 
+
+# TODO: do we need streamlit_option_menu?
 
 
 uploaded_file = st.file_uploader("Upload an image", type=["jpg", "jpeg", "png"])
@@ -45,10 +51,10 @@ def image_to_base64(image: Image.Image) -> str:
     return base64.b64encode(buffered.getvalue()).decode()
 
 if uploaded_file is not None:
-    # # Display the uploaded image
+    # Display the uploaded image
     image = Image.open(uploaded_file)
 
-    # # Convert the image to base64
+    # Convert the image to base64
     image_base64 = image_to_base64(image)
 
     if uploaded_file and not openai_api_key:
@@ -120,19 +126,19 @@ with st.form('caegory_form', clear_on_submit=True):
 
 # # TODO: create separated menu? for the interactive guiding page
 
-# for msg in st.session_state.messages:
-#     st.chat_message(msg["role"]).write(msg["content"])
+for msg in st.session_state.messages:
+    st.chat_message(msg["role"]).write(msg["content"])
 
-# if prompt := st.chat_input():
-#     if not openai_api_key:
-#         st.info("Please add your OpenAI API key to continue.")
-#         st.stop()
+if prompt := st.chat_input():
+    if not openai_api_key:
+        st.info("Please add your OpenAI API key to continue.")
+        st.stop()
 
-#     client = OpenAI(api_key=openai_api_key)
+    client = OpenAI(api_key=openai_api_key)
 
-#     st.session_state.messages.append({"role": "user", "content": prompt})
-#     st.chat_message("user").write(prompt)
-#     response = client.chat.completions.create(model="gpt-4-vision-preview", messages=st.session_state.messages)
-#     msg = response.choices[0].message.content
-#     st.session_state.messages.append({"role": "assistant", "content": msg})
-#     st.chat_message("assistant").write(msg)
+    st.session_state.messages.append({"role": "user", "content": prompt})
+    st.chat_message("user").write(prompt)
+    response = client.chat.completions.create(model="gpt-4-vision-preview", messages=st.session_state.messages)
+    msg = response.choices[0].message.content
+    st.session_state.messages.append({"role": "assistant", "content": msg})
+    st.chat_message("assistant").write(msg)

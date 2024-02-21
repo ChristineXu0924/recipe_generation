@@ -11,8 +11,11 @@ def encode_image(image_path):
         # print(type(image_file))
         return base64.b64encode(image_file.read()).decode('utf-8')
 
-def ingredient_identifier(image_path):
-    base64_image = encode_image(image_path)
+def ingredient_identifier(image_path, method, api_key):
+    if method == 'python':
+        base64_image = encode_image(image_path)
+    else:
+        base64_image = image_path
     headers = {
             "Content-Type": "application/json",
             "Authorization": f"Bearer {api_key}"

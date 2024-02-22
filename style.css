@@ -1,7 +1,49 @@
-/* FILEPATH: style.css */
-.hero-title {
-    font-size: 5rem;
-    text-align: center;
-    font-family: "Georgia";
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
 }
-/* Add your CSS styles here */
+
+header {
+    text-align: center;
+    padding: 20px 0;
+    background-color: #f0f0f0;
+}
+
+nav {
+    text-align: center;
+    background-color: #333;
+    color: #fff;
+    padding: 10px 0;
+}
+
+nav a {
+    color: #fff;
+    text-decoration: none;
+    padding: 0 10px;
+}
+
+nav a:hover {
+    background-color: #ddd;
+    color: #333;
+}
+
+section {
+    margin: 20px auto;
+    max-width: 800px;
+    padding: 0 20px;
+}
+
+footer {
+    text-align: center;
+    padding: 10px 0;
+    background-color: #333;
+    color: #fff;
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    text-align: center;
+}

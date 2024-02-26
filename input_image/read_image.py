@@ -28,7 +28,7 @@ def ingredient_identifier(image_path, method, api_key):
                 "content": [
                     {
                     "type": "text",
-                    "text": "Please identify all the food ingredients in the image, response in json format with the list of items."
+                    "text": "Please identify all the food ingredients in the image, response in json format with the list of items, using 'items' as the key."
                     },
                     {
                     "type": "image_url",

@@ -115,7 +115,9 @@ if uploaded_file is not None:
 
 ##----------------------------------------------------
 # TODO: create a function to retrieve the data from the database
-
+def connect_db(db_path):
+    conn = sqlite3.connect(db_path)
+    return conn
 
 
                 

@@ -16,42 +16,6 @@ from input_image import read_image
 import json
 import sqlite3
 
-# create website sidebar, with api_key input and filters/sort
-with st.sidebar:
-    openai_api_key = st.text_input("OpenAI API Key", key="chatbot_api_key", type="password")
-    "[Get an OpenAI API key](https://platform.openai.com/account/api-keys)"
-
-# Using a select form?
-    diets = [None, 'vegan', 'lactose free']
-    cuisines = [None, 'african', 'american', 'asian', 'creole and cajun', 
-                'english','french','greek','indian','italian',
-                'latin american','mediterranean','middle eastern',
-                'russian and ukranian','spanish',
-                'thai','turkish']
-    types = [None, 'breakfast and brunch', 'main dish', 'side dish', 'salad', 'baked goods']
-
-
-    with st.form('category_form', clear_on_submit=True):
-        st.selectbox('Select Dietary Restriction', diets, key='diet')
-        st.selectbox('Select Cuisines', cuisines,key='cuisine')
-        st.selectbox('Select Meal Type', types, key='type')
-
-        "---"
-        with st.expander('Extra requirements'):
-            requests = st.text_area("", placeholder='Enter extra requirements here...')
-
-        submitted = st.form_submit_button('Save inputs')
-        if submitted:
-            # TODO: merging the data based on submitted fields 
-            categorical = str(st.session_state['diet']) + str(st.session_state['cuisine']) + str(st.session_state['type'])
-            words = str(st.session_state['Extra requirements'])
-
-            # TODO: save into database for interaction
-            st.write(f'Current categorical : {categorical}')
-            st.write(f'Current additional comment: {words}')
-
-
-
 # create page header
 st.header(':cook: PicToPlate', divider='rainbow')
 
@@ -70,11 +34,86 @@ st.caption(":shallow_pan_of_food: A cooking assistant powered by OpenAI LLM")
 if "messages" not in st.session_state:
     st.session_state["messages"] = [{"role": "assistant", "content": "Please upload an image so we can get started!"}]
 
+# create website sidebar, with api_key input and filters/sort
+with st.sidebar:
+    openai_api_key = st.text_input("OpenAI API Key", key="chatbot_api_key", type="password")
+    "[Get an OpenAI API key](https://platform.openai.com/account/api-keys)"
+
+
+
+uploaded_file = st.file_uploader("Upload an image", type=["jpg", "jpeg", "png"])
+
+
+client = OpenAI(api_key=openai_api_key)
+
+def generate_response(input_text):
+    response = client.chat.completions.create(
+        model="gpt-3.5-turbo",
+        messages=st.session_state.messages
+    )
+    return response.choices[0].message.content
+
+
+# TODO: connect to database, retrieve the data and display the result. scrap picture too.
+
+if st.session_state.messages:
+    for msg in st.session_state.messages:
+        st.chat_message(msg["role"]).write(msg["content"])
+
+# User input
+if prompt := st.chat_input():
+    st.session_state.messages.append({"role": "user", "content": prompt})
+    st.chat_message("user").write(prompt)
+
+    # Generate response
+    response = generate_response(prompt)
+
+    st.session_state.messages.append({"role": "assistant", "content": response})
+    st.chat_message("assistant").write(response)
+
+
+with st.sidebar:
+# Using a select form?
+    diets = [None, 'vegan', 'lactose free']
+    cuisines = [None, 'african', 'american', 'asian', 'creole and cajun', 
+                'english','french','greek','indian','italian',
+                'latin american','mediterranean','middle eastern',
+                'russian and ukranian','spanish',
+                'thai','turkish']
+    types = [None, 'breakfast and brunch', 'main dish', 'side dish', 'salad', 'baked goods']
+
+
+    with st.form('category_form', clear_on_submit=True):
+        st.selectbox('Select Dietary Restriction', diets, key='diet')
+        st.selectbox('Select Cuisines', cuisines,key='cuisine')
+        st.selectbox('Select Meal Type', types, key='type')
+
+        "---"
+        # with st.expander('Extra requirements'):
+        #     requests = st.text_area("", placeholder='Enter extra requirements here...')
+
+        submitted = st.form_submit_button('Save inputs')
+if submitted:
+    # TODO: merging the data based on submitted fields 
+    categorical = str(st.session_state['diet']) + ' '+ str(st.session_state['cuisine']) +' ' + str(st.session_state['type'])
+    # words = str(st.session_state['Extra requirements'])
+
+    # TODO: save into database for interaction
+    st.write(f'Current categorical : {categorical}')
+    # st.write(f'Current additional comment: {words}')
+    
+    response = generate_response(f'Use the provided ingredients to generate a {categorical} recipe. Do not have to use all of them')
+    # Display response
+    st.session_state.messages.append({"role": "assistant", "content": response})
+    st.chat_message("assistant").write(response)
+
+
+
 
 # TODO: do we need streamlit_option_menu?
 
 
-uploaded_file = st.file_uploader("Upload an image", type=["jpg", "jpeg", "png"])
+
 
 ######################### Use input_image/image_reader instead ##########
 def image_to_base64(image: Image.Image) -> str:
@@ -106,6 +145,7 @@ if uploaded_file is not None:
         # st.write(ing_message)
 
         st.session_state["messages"] = [{"role": "assistant", "content": ing_message}]
+        response = generate_response(prompt)
 
         
         # if response.status_code == 200:
@@ -115,9 +155,9 @@ if uploaded_file is not None:
 
 ##----------------------------------------------------
 # TODO: create a function to retrieve the data from the database
-def connect_db(db_path):
-    conn = sqlite3.connect(db_path)
-    return conn
+# def connect_db(db_path):
+#     conn = sqlite3.connect(db_path)
+#     return conn
 
 
                 
@@ -131,30 +171,30 @@ def connect_db(db_path):
 
 # TODO: create separated menu? for the interactive guiding page
 
+# client = OpenAI(api_key=openai_api_key)
+
+# def generate_response(input_text):
+#     response = client.chat.completions.create(
+#         model="gpt-3.5-turbo",
+#         messages=st.session_state.messages
+#     )
+#     return response.choices[0].message.content
 
 
-for msg in st.session_state.messages:
-    st.chat_message(msg["role"]).write(msg["content"])
+# # TODO: connect to database, retrieve the data and display the result. scrap picture too.
 
+# if st.session_state.messages:
+#     for msg in st.session_state.messages:
+#         st.chat_message(msg["role"]).write(msg["content"])
 
-if prompt := st.chat_input():
-    if not openai_api_key:
-        st.info("Please add your OpenAI API key to continue.")
-        st.stop()
+# # User input
+# if prompt := st.chat_input():
+#     st.session_state.messages.append({"role": "user", "content": prompt})
+#     st.chat_message("user").write(prompt)
 
+#     # Generate response
+#     response = generate_response(prompt)
 
-def generate_response(input_text):
-    llm = openai_llm(temperature=0.7, openai_api_key=openai_api_key)
-    st.info(llm(input_text))
+#     st.session_state.messages.append({"role": "assistant", "content": response})
+#     st.chat_message("assistant").write(response)
 
-
-# TODO: connect to database, retrieve the data and display the result. scrap picture too.
-    
-    client = OpenAI(api_key=openai_api_key)
-
-    st.session_state.messages.append({"role": "user", "content": prompt})
-    st.chat_message("user").write(prompt)
-    response = client.chat.completions.create(model="gpt-3.5-turbo", messages=st.session_state.messages)
-    msg = response.choices[0].message.content
-    st.session_state.messages.append({"role": "assistant", "content": msg})
-    st.chat_message("assistant").write(msg)

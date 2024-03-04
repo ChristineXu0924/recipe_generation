@@ -15,6 +15,9 @@ from input_image import read_image
 
 import json
 import sqlite3
+import pickle
+
+# connect to dataset
 
 # create page header
 st.header(':cook: PicToPlate', divider='rainbow')

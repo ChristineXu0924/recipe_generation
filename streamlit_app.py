@@ -60,6 +60,8 @@ with st.sidebar:
     openai_api_key = st.text_input("OpenAI API Key", key="chatbot_api_key", type="password")
     "[Get an OpenAI API key](https://platform.openai.com/account/api-keys)"
 
+    
+
 
 
 ############# Set up OpenAI chatbot ################
@@ -72,9 +74,10 @@ def generate_response(input_text):
     )
     return response.choices[0].message.content
 
-llm = ChatOpenAI(
-        temperature=0, model="gpt-3.5-turbo-0613", openai_api_key=openai_api_key, streaming=True
-    )
+if openai_api_key:
+    llm = ChatOpenAI(
+            temperature=0, model="gpt-3.5-turbo-0613", openai_api_key=openai_api_key, streaming=True
+        )
 if 'results' not in st.session_state:
     st.session_state['results'] = None
 

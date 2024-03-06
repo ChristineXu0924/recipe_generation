@@ -6,7 +6,7 @@
 -->
 <html>
 	<head>
-		<title>Editorial by HTML5 UP</title>
+		<title>PicToPlate</title>
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
 		<link rel="stylesheet" href="assets/css/main.css" />
@@ -114,7 +114,10 @@
 											<h3>Search Evaluation</h3>
 										</header>
 										<p>
-											
+											Search is inherently hard to evaluate due to two conflicting factors: usefulness and accuracy. To first account for accuracy, we calculated the cosine similarity scores between our ingredient query list and the ingredients utilized in the recipe. However we also felt that it was important to qualitatively examine the results of our search based on if the returned recipe could be feasibly cooked with the ingredients in the query. We will test a number of different ingredient queries, count how many matches there are between the recipe's ingredients and the query's ingredients, and calculate a “feasibility” score. These matches are also subjective on the criteria of with the ingredients in the query, will the final product closely resemble the target recipe? This subjective evaluation allows for ingredient substitution and takes into account common spices or condiments found in a typical kitchen, such as as salt, pepper, sugar, water, and others.
+										</p>
+										<p>
+											We created 4 sample ingredient queries to evaluate our search. Typically, the cosine similarities scores were considerably lower than our feasibility score.
 										</p>
 
 										<header>

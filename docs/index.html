@@ -54,7 +54,7 @@
 								<section id="intro">
 									<div class="content">
 										<header>
-											<h2>Introduction <br/></h2>
+											<h2>Introduction<br/></h2>
 										</header>
 										<p>For those looking to minimize time spent searching for recipes, Google is simply not sufficient. It fails to return succinct results, and does not adequately address search personalization, such as filtering out recipes that include a certain ingredient. In our project, we will utilize object detection models and large language models to enhance recipe search and add assistance throughout the cooking process. 
 
@@ -67,6 +67,37 @@
 												<li>Search using the list of ingredients returned from the previous step in a database of recipes</li>
 												<li>Display possible recipes to cook, involving recipe summarization and further interaction</li>
 											  </ol>
+										</p>
+										<!-- <ul class="actions">
+											<li><a href="#" class="button big">Learn More</a></li>
+										</ul> -->
+									</div>
+								</section>
+
+								<section id="methods">
+									<div class="content">
+										<header>
+											<h2>Methods<br/></h2>
+										</header>
+										<header>
+											<h3>Pre-Processing</h3>
+										</header>
+										<p>
+											Aside from merging the datasets as previously mentioned, there was little  data-preprocessing that we implemented. We used a named entity recognition (NER) model to extract the key ingredients from each recipe that cannot be substituted for other ingredients. For example, if the recipe is fettuccine alfredo, parmesan cheese cannot be substituted for cheddar cheese and the type of pasta used should be fettuccine.
+										</p>
+
+										<header>
+											<h3>Object Detection Modle</h3>
+										</header>
+										<p>
+											The model we used to determine individual ingredients in an image is the GPT-4 Vision model. We also tried two open source models, ResNet-50 and YOLO, however, GPT-4 performed significantly better. GPT-4 is able to accurately identify almost every ingredient in the images we have tested. However, a limitation of the model is that it is unable to detect the quantity of ingredients present other than counting. 
+										</p>
+
+										<header>
+											<h3>Search</h3>
+										</header>
+										<p>
+											We tested 3 different options for our search model: semantic search, TF-IDF, and exact keyword matches, and evaluated them qualitatively. We compared how each search algorithm performed by comparing the ingredients in the recipe returned against our list of input ingredients. From our tests, we found that semantic search made too many assumptions about our inputs, and returned recipes used our ingredients, but also required many other ingredients that were not included in the input. Using \texttt{str.contains()} seemed to have to opposite effect; the recipes returned matched our input, but were extremely simple, often being beverages that only required 2-3 ingredients. TF-IDF was in the middle of the spectrum: the recipes matched our input list, but made some ingredient substitutions. In order to correct for this effect, we employed a NER model to extract key ingredients that must be included in the returned recipes.
 										</p>
 										<!-- <ul class="actions">
 											<li><a href="#" class="button big">Learn More</a></li>

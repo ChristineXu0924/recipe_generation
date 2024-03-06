@@ -2,4 +2,11 @@ streamlit
 openai
 requests
 langchain
-
+nltk
+# pickle
+dill
+scikit-learn
+gensim
+langchain_experimental
+unidecode
+tabulate

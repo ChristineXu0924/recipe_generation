@@ -45,7 +45,7 @@ class Recommender:
         return self.recipe[self.recipe.index.isin(top)]
     
     def get_recommend(self, in_ing, N=1000):
-        in_ing = in_ing.split(", ")
+        # in_ing = in_ing.split(", ")
         in_ing = [x.lower() for x in in_ing]
         # corpus = self.get_and_sort_corpus(self.data['ingredients_parsed'])
         in_ing = ingredients_parser(in_ing)

@@ -20,7 +20,7 @@ from input_image import read_image
 from combined import Recommender
 import json
 import sqlite3
-import pickle
+# import pickle
 import dill
 import config
 from sklearn.metrics.pairwise import cosine_similarity
@@ -31,11 +31,11 @@ from gensim.models import Word2Vec
 model = Word2Vec.load("models/model_cbow_2.bin")
 # load in tfdif model and encodings
 with open(config.PICKLE_FULL_PATH, 'rb') as f:
-    full_recipes = pickle.load(f)
+    full_recipes = dill.load(f)
 with open(config.TFIDF_MODEL_PATH, 'rb') as f:
-    tfidf = pickle.load(f)
+    tfidf = dill.load(f)
 with open(config.TFIDF_ENCODING_PATH, 'rb') as f:
-    tfidf_encodings = pickle.load(f)
+    tfidf_encodings = dill.load(f)
 
 rec = Recommender(model, tfidf, tfidf_encodings, full_recipes)
 

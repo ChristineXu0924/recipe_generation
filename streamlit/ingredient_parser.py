@@ -12,6 +12,7 @@ import unidecode
 import config 
 
 nltk.download('wordnet')
+nltk.download('stopwords')
 
 
 def title_parser(title):

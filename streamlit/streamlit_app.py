@@ -30,7 +30,7 @@ from gensim.models import Word2Vec
 # load in data and models
 @st.cache_resource
 def load_data():
-    model = Word2Vec.load("streamlit/models/model_cbow_2.bin")
+    model = Word2Vec.load("./models/model_cbow_2.bin")
     # load in tfdif model and encodings
     with open(config.PICKLE_FULL_PATH, 'rb') as f:
         full_recipes = pickle.load(f)

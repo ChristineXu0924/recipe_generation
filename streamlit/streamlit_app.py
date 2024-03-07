@@ -27,8 +27,6 @@ from sklearn.metrics.pairwise import cosine_similarity
 from gensim.models import Word2Vec
 import os
 
-nltk.download('wordnet')
-
 # load in data and models
 @st.cache_resource
 def load_data():

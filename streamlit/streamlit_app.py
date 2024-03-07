@@ -20,24 +20,29 @@ from input_image import read_image
 from combined import Recommender
 import json
 import sqlite3
-# import pickle
+import pickle
 import dill
 import config
 from sklearn.metrics.pairwise import cosine_similarity
 from gensim.models import Word2Vec
 
 
-# connect to dataset
-model = Word2Vec.load("models/model_cbow_2.bin")
-# load in tfdif model and encodings
-with open(config.PICKLE_FULL_PATH, 'rb') as f:
-    full_recipes = dill.load(f)
-with open(config.TFIDF_MODEL_PATH, 'rb') as f:
-    tfidf = dill.load(f)
-with open(config.TFIDF_ENCODING_PATH, 'rb') as f:
-    tfidf_encodings = dill.load(f)
+# load in data and models
+@st.cache_resource
+def load_data():
+    model = Word2Vec.load("models/model_cbow_2.bin")
+    # load in tfdif model and encodings
+    with open(config.PICKLE_FULL_PATH, 'rb') as f:
+        full_recipes = pickle.load(f)
+    with open(config.TFIDF_MODEL_PATH, 'rb') as f:
+        tfidf = dill.load(f)
+    with open(config.TFIDF_ENCODING_PATH, 'rb') as f:
+        tfidf_encodings = dill.load(f)
 
-rec = Recommender(model, tfidf, tfidf_encodings, full_recipes)
+    rec = Recommender(model, tfidf, tfidf_encodings, full_recipes)
+    return model, full_recipes, tfidf, tfidf_encodings, rec
+
+model, full_recipes, tfidf, tfidf_encodings, rec = load_data()
 
 
 # create page header
@@ -73,6 +78,14 @@ def generate_response(input_text):
         messages=st.session_state.messages
     )
     return response.choices[0].message.content
+
+def construct_prompt(recipes):
+    # Constructs a prompt asking the model to rank the recipes
+    prompt = "I have listed 100 recipes based on available ingredients. Please choose the best three recipes based on healthiness, flavor, and ease of cooking:\n\n"
+    for i, recipe in enumerate(recipes, start=1):
+        prompt += f"{i}. {recipe['name']}: {recipe['description']}\n"  # Add more details as needed
+    return prompt
+
 
 if openai_api_key:
     llm = ChatOpenAI(
@@ -147,13 +160,14 @@ if uploaded_file is not None:
             "Content-Type": "application/json"
         }
         response = read_image.ingredient_identifier(image_base64, 'streamlit', openai_api_key)
-        # response = read_image.ingredient_identifier(image_base64, openai_api_key)
         ing = json.loads(response['choices'][0]['message']['content'].strip('` \n').strip('json\n'))['items']
         ing_message = 'Looks like we have ' + ', '.join(ing) + ' available.'
 
         st.session_state["messages"] = [{"role": "assistant", "content": ing_message}]
 
-        st.session_state['results'] = rec.get_recommend(ing, 5)
+        # initial_recs = rec.get_recommend(ing, 3)
+        # prompt = construct_prompt(initial_recs)
+        st.session_state['results'] = rec.get_recommend(ing, 3)
 
         # Create the DataFrame agent and store it in st.session_state
         st.session_state['pandas_df_agent'] = create_pandas_dataframe_agent(
@@ -182,8 +196,6 @@ if uploaded_file is not None:
             
             # Add the constructed recipe details to the chat
             st.session_state.messages.append({"role": "assistant", "content": recipe_details})
-            st.chat_message("assistant").write("checking")
-            st.chat_message("assistant").write(recipe_details)
 
 
 

@@ -11,6 +11,8 @@ import unidecode
 
 import config 
 
+nltk.download('wordnet')
+
 
 def title_parser(title):
     title = unidecode.unidecode(title)

@@ -25,12 +25,14 @@ import dill
 import config
 from sklearn.metrics.pairwise import cosine_similarity
 from gensim.models import Word2Vec
+import os
 
+st.write(os.getcwd())
 
 # load in data and models
 @st.cache_resource
 def load_data():
-    model = Word2Vec.load(config.W2V_PATH)
+    # model = Word2Vec.load(config.W2V_PATH)
     # load in tfdif model and encodings
     with open(config.PICKLE_FULL_PATH, 'rb') as f:
         full_recipes = pickle.load(f)

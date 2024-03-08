@@ -6,7 +6,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 from gensim.models import Word2Vec
 
 import config
-from ingredient_parser import ingredients_parser
+# from ingredient_parser import ingredients_parser
 
 class Recommender:
     def __init__(self, model, tfidf, tfidf_encodings, data):
@@ -30,7 +30,7 @@ class Recommender:
         # in_ing = in_ing.split(", ")
         in_ing = [x.lower() for x in in_ing]
         # corpus = self.get_and_sort_corpus(self.data['ingredients_parsed'])
-        in_ing = ingredients_parser(in_ing)
+        # in_ing = ingredients_parser(in_ing)
 
         # get embeddings for ingredient doc
         input_embedding = self.tfidf_vec_tr.transform([in_ing])[0].reshape(1, -1)

@@ -27,7 +27,7 @@ In terminal, cd into the corresponding directory and run the following command t
 python final.py
 ```
 ### Running the Application
-The link to our website is following: [https://reciperetrieval-mdhclv7xytdzvwane4r4sf.streamlit.app/](https://reciperetrieval-p8wpbszwyxjcy5n2quqyhr.streamlit.app/)
+The link to our website is following: https://pic2plate.streamlit.app/
 For now, user can insert their own openai API key to play around with the image input and the following recipe retrieval. We are still working on improving search results, personalization, and user interface. 
 ### Code Credit
 We utilized preexisting code and models from many sources, including:

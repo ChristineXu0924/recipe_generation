@@ -8,15 +8,6 @@ from gensim.models import Word2Vec
 import config
 from ingredient_parser import ingredients_parser
 
-# model = Word2Vec.load("models/model_cbow_2.bin")
-# # load in tfdif model and encodings
-# with open(config.PICKLE_FULL_PATH, 'rb') as f:
-#     full_recipes = pickle.load(f)
-# with open(config.TFIDF_MODEL_PATH, 'rb') as f:
-#     tfidf = pickle.load(f)
-# with open(config.TFIDF_ENCODING_PATH, 'rb') as f:
-#     tfidf_encodings = dill.load(f)
-
 class Recommender:
     def __init__(self, model, tfidf, tfidf_encodings, data):
         self.model = model
@@ -31,24 +22,16 @@ class Recommender:
             corpus_sorted.append(doc)
         return corpus_sorted
 
-    def recommendation_results(self, scores, N=1000):
-        # df_recipes = pd.read_csv(config.RECIPES_PATH)
+    def recommendation_results(self, scores, N=30):
         top = sorted(range(len(scores)), key=lambda i: scores[i], reverse=True)[:N]
-        # recommendation = pd.DataFrame(columns = ['recipe', 'ingredients', 'score', 'url'])
-        # count = 0
-        # for i in top:
-        #     recommendation.at[count, "recipe"] = df_recipes["name"][i]
-        #     recommendation.at[count, "ingredients"] = df_recipes['ingredients_x'][i]
-        #     recommendation.at[count, "url"] = df_recipes["link"][i]
-        #     recommendation.at[count, "score"] = f"{scores[i]}"
-        #     count += 1
-        return self.recipe[self.recipe.index.isin(top)]
+        return self.recipe[self.recipe.index.isin(top)][['name', 'ingredients_x', 'link','steps','tags']]
     
-    def get_recommend(self, in_ing, N=1000):
+    def get_recommend(self, in_ing, N=30):
         # in_ing = in_ing.split(", ")
         in_ing = [x.lower() for x in in_ing]
         # corpus = self.get_and_sort_corpus(self.data['ingredients_parsed'])
         in_ing = ingredients_parser(in_ing)
+
         # get embeddings for ingredient doc
         input_embedding = self.tfidf_vec_tr.transform([in_ing])[0].reshape(1, -1)
 

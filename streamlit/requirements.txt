@@ -8,5 +8,7 @@ dill
 scikit-learn
 gensim
 langchain_experimental
+langchain_openai
+langchain_core
 unidecode
 tabulate

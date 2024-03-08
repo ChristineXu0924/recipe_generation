@@ -6,10 +6,12 @@ import streamlit as st
 import openai
 from openai import OpenAI
 
-from langchain.agents import AgentType
-from langchain_experimental.agents import create_pandas_dataframe_agent
-from langchain.callbacks import StreamlitCallbackHandler
-from langchain.chat_models import ChatOpenAI
+from operator import itemgetter
+from langchain_community.vectorstores import faiss
+from langchain_core.output_parsers import StrOutputParser
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.runnables import RunnableLambda, RunnablePassthrough
+from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 
 import numpy as np
 import base64
@@ -26,7 +28,11 @@ import config
 from sklearn.metrics.pairwise import cosine_similarity
 from gensim.models import Word2Vec
 import os
+import re
+import chat
+import ast
 
+# st.write(os.getcwd())
 # load in data and models
 @st.cache_resource
 def load_data():
@@ -43,6 +49,14 @@ def load_data():
     return model, full_recipes, tfidf, tfidf_encodings, rec
 
 model, full_recipes, tfidf, tfidf_encodings, rec = load_data()
+
+diets = [None, 'vegan', 'lactose free']
+cuisines = [None, 'african', 'american', 'asian', 'creole and cajun', 
+            'english','french','greek','indian','italian',
+            'latin american','mediterranean','middle eastern',
+            'spanish', 'thai']
+types = [None, 'breakfast and brunch', 'main dish', 'side dish', 'salad', 'baked goods']
+condiments = ['salt', 'pepper', 'oil']
 
 
 # create page header
@@ -69,7 +83,7 @@ with st.sidebar:
 
 
 
-############# Set up OpenAI chatbot ################
+############# Set up chatbot ################
 client = OpenAI(api_key=openai_api_key)
 
 def generate_response(input_text):
@@ -79,12 +93,36 @@ def generate_response(input_text):
     )
     return response.choices[0].message.content
 
-def construct_prompt(recipes):
-    # Constructs a prompt asking the model to rank the recipes
-    prompt = "I have listed 100 recipes based on available ingredients. Please choose the best three recipes based on healthiness, flavor, and ease of cooking:\n\n"
-    for i, recipe in enumerate(recipes, start=1):
-        prompt += f"{i}. {recipe['name']}: {recipe['description']}\n"  # Add more details as needed
+def create_prompt(recipes_df, num_recipes=50):
+    """Generate a prompt for the LLM with top recipes from the DataFrame."""
+    recipes_text = ""
+    for i, row in recipes_df.iterrows():
+        recipes_text += f"{i + 1}. {row['name']} - Ingredients: {row['ingredients_x']}; Description: {row['tags']}...\n"
+        if i >= num_recipes - 1:
+            break  # Only use top num_recipes entries
+
+    prompt = (f"I have found {num_recipes} recipes based on the ingredients provided. "
+              "Please rank the best three recipes based on taste, healthiness, and simplicity:\n\n"
+              f"{recipes_text}")
     return prompt
+
+def get_top_three_recipes(recipes_df, openai_api_key, category=False):
+    prompt = create_prompt(recipes_df)
+
+    response = client.chat.completions.create(
+        model="gpt-3.5-turbo",  # Or another suitable engine
+        messages=prompt,
+        max_tokens=300,  # Adjust as needed
+        temperature=0.7
+    )
+
+    return response.choices[0].text.strip()  # This should contain the ranking or selection of top recipes
+
+def extract_recipe_indices(response_text):
+    # Example assuming the response is "The best recipes are 1, 4, and 5."
+    import re
+    indices = [int(num) - 1 for num in re.findall(r'\d+', response_text)]  # Converts string numbers to list of indices
+    return indices
 
 
 if openai_api_key:
@@ -101,15 +139,7 @@ if 'pandas_df_agent' not in st.session_state:
 ################## SideBar and Inputs ###################################
 
 with st.sidebar:
-# Using a select form?
-    diets = [None, 'vegan', 'lactose free']
-    cuisines = [None, 'african', 'american', 'asian', 'creole and cajun', 
-                'english','french','greek','indian','italian',
-                'latin american','mediterranean','middle eastern',
-                'spanish', 'thai']
-    types = [None, 'breakfast and brunch', 'main dish', 'side dish', 'salad', 'baked goods']
-
-
+    st.subheader("Filters")
     with st.form('category_form', clear_on_submit=True):
         st.selectbox('Select Dietary Restriction', diets, key='diet')
         st.selectbox('Select Cuisines', cuisines,key='cuisine')
@@ -117,12 +147,11 @@ with st.sidebar:
 
         "---"
         submitted = st.form_submit_button('Save inputs')
+
 if submitted:
     # TODO: merging the data based on submitted fields 
     categorical = str(st.session_state['diet']) + ' '+ str(st.session_state['cuisine']) +' ' + str(st.session_state['type'])
-    # TODO: save into database for interaction
     st.write(f'Current categorical : {categorical}')
-    # st.write(f'Current additional comment: {words}')
     
     response = generate_response(f'Use the provided ingredients to generate a {categorical} recipe. Do not have to use all of them')
     # Display response
@@ -131,10 +160,9 @@ if submitted:
 
 
 
+######################### Use input_image/image_reader instead ##########
 uploaded_file = st.file_uploader("Upload an image", type=["jpg", "jpeg", "png"])
 
-
-######################### Use input_image/image_reader instead ##########
 def image_to_base64(image: Image.Image) -> str:
     buffered = BytesIO()
     image.save(buffered, format="JPEG")
@@ -159,54 +187,29 @@ if uploaded_file is not None:
             "Authorization": f"Bearer {openai_api_key}",
             "Content-Type": "application/json"
         }
+
         response = read_image.ingredient_identifier(image_base64, 'streamlit', openai_api_key)
         ing = json.loads(response['choices'][0]['message']['content'].strip('` \n').strip('json\n'))['items']
         ing_message = 'Looks like we have ' + ', '.join(ing) + ' available.'
+        st.chat_message("assistant").write(ing_message)
 
-        st.session_state["messages"] = [{"role": "assistant", "content": ing_message}]
+        # st.session_state["messages"] = [{"role": "assistant", "content": ing_message}]
+        initial_recs = rec.get_recommend(ing, 30)
+        
+        # st.session_state['results'] = output
+        chatbot = chat.query_llm(initial_recs, openai_api_key)
+        result = chatbot.invoke(f'what is 3 recipe that can be suits best with the available ingredients: {ing}? return as a list of their index')
+        list1 = ast.literal_eval(result)
+        result_lst = [i - 1 for i in list1]
+        top_recipes_df = initial_recs[initial_recs.index.isin(result_lst)]
 
-        # initial_recs = rec.get_recommend(ing, 3)
-        # prompt = construct_prompt(initial_recs)
-        st.session_state['results'] = rec.get_recommend(ing, 3)
+        st.dataframe(top_recipes_df)
 
-        # Create the DataFrame agent and store it in st.session_state
-        st.session_state['pandas_df_agent'] = create_pandas_dataframe_agent(
-            llm,
-            st.session_state['results'],  # Use the results stored in session state
-            verbose=True,
-            agent_type=AgentType.OPENAI_FUNCTIONS,
-            handle_parsing_errors=True,
-        )
-        if st.session_state['pandas_df_agent'] is not None:
-            # Construct an introductory message for the recipes
-            recipe_intro = "Based on the ingredients identified, here are some recipe suggestions:"
-            st.session_state.messages.append({"role": "assistant", "content": recipe_intro})
-            st.chat_message("assistant").write(recipe_intro)
-            
-            # Generate a response with the recipes using the DataFrame agent
-            # You may need to format your results DataFrame in a way that's easy to display as a message
-            recipe_details = ""  # Initialize a string to store details of suggested recipes
-            
-            # Assuming 'results' contains columns 'Recipe Name', 'Ingredients', 'Instructions'
-            # Modify this according to your actual DataFrame structure
-            for index, row in st.session_state['results'].iterrows():
-                recipe_details += f"**Recipe {index + 1}: {row['name']}**\n"
-                recipe_details += f"Ingredients: {row['ingredients_x']}\n"
-                recipe_details += f"Instructions: {row['steps'][:150]}... (more)\n\n"  # Truncate for brevity
-            
-            # Add the constructed recipe details to the chat
-            st.session_state.messages.append({"role": "assistant", "content": recipe_details})
+        ##### 
 
 
 
-# for now suppose there is no change
 ################### Load in search ##################
-
-# TODO: write the RAG in separated file and import here. How to deal with filters?
-
-# TODO: connect to database, retrieve the data and display the result. scrap picture too.
-
-
 
 if st.session_state.messages:
     for msg in st.session_state.messages:

@@ -12,3 +12,4 @@ langchain_openai
 langchain_core
 unidecode
 tabulate
+faiss-cpu

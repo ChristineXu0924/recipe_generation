@@ -3,7 +3,6 @@
 # <div class="primary-image svelte-wgcq7z"> image source
 
 import streamlit as st
-import openai
 from openai import OpenAI
 
 from operator import itemgetter
@@ -18,15 +17,13 @@ import base64
 import requests
 from PIL import Image
 from io import BytesIO
+from gensim.models import Word2Vec
 from input_image import read_image
 from combined import Recommender
 import json
-import sqlite3
 import pickle
 import dill
 import config
-from sklearn.metrics.pairwise import cosine_similarity
-from gensim.models import Word2Vec
 import os
 import re
 import chat
@@ -92,38 +89,6 @@ def generate_response(input_text):
         messages=st.session_state.messages
     )
     return response.choices[0].message.content
-
-def create_prompt(recipes_df, num_recipes=50):
-    """Generate a prompt for the LLM with top recipes from the DataFrame."""
-    recipes_text = ""
-    for i, row in recipes_df.iterrows():
-        recipes_text += f"{i + 1}. {row['name']} - Ingredients: {row['ingredients_x']}; Description: {row['tags']}...\n"
-        if i >= num_recipes - 1:
-            break  # Only use top num_recipes entries
-
-    prompt = (f"I have found {num_recipes} recipes based on the ingredients provided. "
-              "Please rank the best three recipes based on taste, healthiness, and simplicity:\n\n"
-              f"{recipes_text}")
-    return prompt
-
-def get_top_three_recipes(recipes_df, openai_api_key, category=False):
-    prompt = create_prompt(recipes_df)
-
-    response = client.chat.completions.create(
-        model="gpt-3.5-turbo",  # Or another suitable engine
-        messages=prompt,
-        max_tokens=300,  # Adjust as needed
-        temperature=0.7
-    )
-
-    return response.choices[0].text.strip()  # This should contain the ranking or selection of top recipes
-
-def extract_recipe_indices(response_text):
-    # Example assuming the response is "The best recipes are 1, 4, and 5."
-    import re
-    indices = [int(num) - 1 for num in re.findall(r'\d+', response_text)]  # Converts string numbers to list of indices
-    return indices
-
 
 if openai_api_key:
     llm = ChatOpenAI(
@@ -202,14 +167,17 @@ if uploaded_file is not None:
         list1 = ast.literal_eval(result)
         result_lst = [i - 1 for i in list1]
         top_recipes_df = initial_recs[initial_recs.index.isin(result_lst)]
-
+        st.session_state['result'] = top_recipes_df
         st.dataframe(top_recipes_df)
+
+        # Display response  ?? store into cache for interaction. 
+        st.session_state.messages.append({"role": "assistant", "content": response})
+        st.chat_message("assistant").write(response)
+
+
 
         ##### 
 
-
-
-################### Load in search ##################
 
 if st.session_state.messages:
     for msg in st.session_state.messages:

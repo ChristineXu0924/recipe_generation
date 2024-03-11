@@ -4,9 +4,11 @@ import pickle
 import dill
 from sklearn.metrics.pairwise import cosine_similarity
 from gensim.models import Word2Vec
+import streamlit as st
 
 import config
 # from ingredient_parser import ingredients_parser
+
 
 class Recommender:
     def __init__(self, model, tfidf, tfidf_encodings, data):
@@ -26,6 +28,7 @@ class Recommender:
         top = sorted(range(len(scores)), key=lambda i: scores[i], reverse=True)[:N]
         return self.recipe[self.recipe.index.isin(top)][['name', 'ingredients_x', 'link','steps','tags']]
     
+    @st.spinner('Pulling recipes..')
     def get_recommend(self, in_ing, N=30):
         # in_ing = in_ing.split(", ")
         in_ing = [x.lower() for x in in_ing]

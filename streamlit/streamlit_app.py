@@ -26,8 +26,9 @@ import dill
 import config
 import os
 import re
-import chat
+from chat import CustomDataChatbot
 import ast
+from callback import StreamHandler
 
 # st.write(os.getcwd())
 # load in data and models
@@ -90,16 +91,34 @@ def generate_response(input_text):
     )
     return response.choices[0].message.content
 
-if openai_api_key:
-    llm = ChatOpenAI(
-            temperature=0, model="gpt-3.5-turbo-0613", openai_api_key=openai_api_key, streaming=True
-        )
-if 'results' not in st.session_state:
-    st.session_state['results'] = None
+    
+def retrieve_names(message):
+    lines = message.content.split('\n')
+    # Extract the recipe names from each line
+    recipe_names = [line.split('. ', 1)[1] for line in lines if line.strip()]
+    return recipe_names
 
-if 'pandas_df_agent' not in st.session_state:
-    st.session_state['pandas_df_agent'] = None
+def retrieve_info(message, recs):
+    names = retrieve_names(message)
+    names = [i.lower() for i in names]
+    out_df = recs[recs['name'].isin(names)]
+    return out_df[['name', 'link', 'ingredients_x']]
 
+
+# if 'results' not in st.session_state:
+#     st.session_state['results'] = None
+
+
+################## Enhance Display and Interaction ###################
+
+def display_recipes(recipes_df):
+    """Display recipe names as clickable links with ingredients."""
+    for index, row in recipes_df.iterrows():
+        # Recipe name as clickable link
+        st.markdown(f"[{row['name']}]({row['link']})")
+        # Display ingredients related to the recipe
+        st.markdown(f"Ingredients: {row['ingredients_x']}")
+        st.markdown("---")  # Separator
 
 ################## SideBar and Inputs ###################################
 
@@ -114,7 +133,6 @@ with st.sidebar:
         submitted = st.form_submit_button('Save inputs')
 
 if submitted:
-    # TODO: merging the data based on submitted fields 
     categorical = str(st.session_state['diet']) + ' '+ str(st.session_state['cuisine']) +' ' + str(st.session_state['type'])
     st.write(f'Current categorical : {categorical}')
     
@@ -146,7 +164,7 @@ if uploaded_file is not None:
     # User clicks the button to start processing
     if st.button('Identify Ingredients') and openai_api_key:
         # Clear existing chat history
-        st.session_state["messages"] = []
+        # st.session_state["messages"] = []
 
         headers = {
             "Authorization": f"Bearer {openai_api_key}",
@@ -156,49 +174,41 @@ if uploaded_file is not None:
         response = read_image.ingredient_identifier(image_base64, 'streamlit', openai_api_key)
         ing = json.loads(response['choices'][0]['message']['content'].strip('` \n').strip('json\n'))['items']
         ing_message = 'Looks like we have ' + ', '.join(ing) + ' available.'
+        st.session_state['ingredients'] = ing
         st.chat_message("assistant").write(ing_message)
 
         # st.session_state["messages"] = [{"role": "assistant", "content": ing_message}]
         initial_recs = rec.get_recommend(ing, 30)
-        
-        # st.session_state['results'] = output
-        chatbot = chat.query_llm(initial_recs, openai_api_key)
-        result = chatbot.invoke(f'what is 3 recipe that can be suits best with the available ingredients: {ing}? return as a list of their index')
-        list1 = ast.literal_eval(result)
-        result_lst = [i - 1 for i in list1]
-        top_recipes_df = initial_recs[initial_recs.index.isin(result_lst)]
-        st.session_state['result'] = top_recipes_df
-        st.dataframe(top_recipes_df)
 
-        # Display response  ?? store into cache for interaction. 
-        st.session_state.messages.append({"role": "assistant", "content": response})
-        st.chat_message("assistant").write(response)
+        # st.session_state['results'] = output
+        ing = st.session_state['ingredients']
+        CDchatbot = CustomDataChatbot()
+        chatbot = CDchatbot.query_llm(initial_recs, openai_api_key)
+        question= f"what is 3 recipe that can be suits best with the available ingredsents: {ing}? return their index as a list."
+        result = chatbot.invoke({"question": question,
+                    'chat_history': []})
+        
+        top_df = retrieve_info(result['answer'], initial_recs)
+
+        display_recipes(top_df)  # Enhanced display function for recipes
+        st.session_state['agent'] = chatbot
+
+prompt = st.chat_input("Further questions")
+if prompt and 'agent' in st.session_state:
+    chatbot = st.session_state['agent']
+    st.session_state.messages.append({"role": "user", "content": prompt})
+    st.chat_message("user").write(prompt)
+
+    with st.chat_message('assistant'):
+        # st_cb = StreamHandler(st.empty())
+        # response = chatbot.invoke(user_query, callbacks=[st_cb])
+        response = chatbot.invoke({"question": prompt})
+        st.write(response['answer'].content)
+        st.session_state.messages.append({"role": "assistant", "content": response['answer'].content})
+
 
 
 
         ##### 
-
-
-if st.session_state.messages:
-    for msg in st.session_state.messages:
-        st.chat_message(msg["role"]).write(msg["content"])
-
-# User input
-if prompt := st.chat_input():
-    st.session_state.messages.append({"role": "user", "content": prompt})
-    st.chat_message("user").write(prompt)
-
-    if not openai_api_key:
-        st.info("Please add your OpenAI API key to continue.")
-        st.stop()
-
-    if st.session_state['pandas_df_agent'] is not None:
-        with st.chat_message("assistant"):
-            st_cb = StreamlitCallbackHandler(st.container(), expand_new_thoughts=False)
-            response = st.session_state['pandas_df_agent'].run(st.session_state.messages, callbacks=[st_cb])
-            st.session_state.messages.append({"role": "assistant", "content": response})
-            st.write(response)
-
-
 
 

@@ -51,11 +51,11 @@
 
 									<h2>Search</h2>
 									<p>
-										We tested 3 different options for our search model: semantic search, TF-IDF, and exact keyword matching, and evaluated them qualitatively. We compared how each search algorithm performed by comparing the ingredients in the recipe returned against our list of input ingredients. From our tests, we found that semantic search made too many assumptions about our inputs, and returned recipes used our ingredients, but also required many other ingredients that were not included in the input. Using exact keyword matches seemed to have to opposite effect; the recipes returned matched our input, but were extremely simple, often being beverages that only required 2-3 ingredients. TF-IDF was in the middle of the spectrum: the recipes matched our input list, but made some ingredient substitutions. 
+										We tested 3 different options for our search model: semantic search, TF-IDF, and exact keyword matching, and evaluated them qualitatively. We compared how each search algorithm performed by comparing the ingredients in the recipe returned against our list of input ingredients. From our tests, we found that semantic search made too many assumptions about our inputs, and returned recipes used our ingredients, but also required many other ingredients that were not included in the input. Using exact keyword matches seemed to have to opposite effect; the recipes returned matched our input, but were extremely simple, often being beverages that only required 2-3 ingredients. 
 									</p>
 
 									<p>
-										Our final model employed TF-IDF with one layer of trained Word2Vec in order to correct for this effect, we employed a NER method to extract key ingredients from the redundant descriptions that we want to be included in the returned recipes.
+										TF-IDF was in the middle of the spectrum: the recipes matched our input list, but made some inappropriate ingredient substitutions. For instance, cream cheese in a cheese cake recipe should not be replaced with cheddar. In order to correct for this effect, we trained a Word2Vec\cite{word2vec} embedding that captures distributional similarities between words. That is, words that often appear in similar contexts are mapped to vectors separated by a shorter Euclidean distance (the L2 norm). In our case, the words here are recipe ingredients. The following is one example: mozzarella cheese, which is most commonly used in pizza, is considered similar with other pizza-related cheese and ingredients.
 									</p>
 								</section>
 

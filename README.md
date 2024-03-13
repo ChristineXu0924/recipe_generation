@@ -4,10 +4,10 @@ link to static github website: https://christinexu0924.github.io/recipe_retrieva
 Megan Huynh (mlhuynh@ucsd.edu)
 Christine Xu (jix028@ucsd.edu)
 
-# Introduction
+## Introduction
 The goal of this project is to provide users with a list of recipes and they can cook based and an AI cooking assistant on a user input image of their cooking ingredients. 
 
-# How this Repo is Constructed
+## How this Repo is Constructed
 
 ### Folders
 ```

@@ -28,7 +28,6 @@ class Recommender:
         top = sorted(range(len(scores)), key=lambda i: scores[i], reverse=True)[:N]
         return self.recipe[self.recipe.index.isin(top)][['name', 'ingredients_x', 'link','steps','tags']]
     
-    @st.spinner('Pulling recipes..')
     def get_recommend(self, in_ing, N=30):
         # in_ing = in_ing.split(", ")
         in_ing = [x.lower() for x in in_ing]

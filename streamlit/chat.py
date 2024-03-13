@@ -10,12 +10,9 @@ from langchain.prompts.prompt import PromptTemplate
 
 from langchain.chat_models import ChatOpenAI
 from langchain.memory import ConversationBufferMemory
-# from langchain.embeddings import HuggingFaceEmbeddings
 from langchain.chains import ConversationalRetrievalChain
 from langchain_core.messages import AIMessage, HumanMessage, get_buffer_string
 from langchain_core.prompts import format_document
-# from langchain.vectorstores import DocArrayInMemorySearch
-# from langchain.text_splitter import RecursiveCharacterTextSplitter
 
 import re
 import ast 
@@ -27,25 +24,13 @@ class CustomDataChatbot:
         # utils.configure_openai_api_key()
         self.openai_model = "gpt-3.5-turbo"
 
-    # def save_file(self, file):
-    #     folder = 'tmp'
-    #     if not os.path.exists(folder):
-    #         os.makedirs(folder)
-        
-    #     file_path = f'./{folder}/{file.name}'
-    #     with open(file_path, 'wb') as f:
-    #         f.write(file.getvalue())
-    #     return file_path
 
     def create_prompt(self, recipes_df, num_recipes=30):
         """Generate a prompt for the LLM with top recipes from the DataFrame."""
         recipes_text = ""
         for i, row in recipes_df.iterrows():
-            recipes_text += f"{i + 1}. {row['name']} - Ingredients: {row['ingredients_x']}; Description: {row['tags']}...\n"
-            
-        # prompt = (f"I have found {num_recipes} recipes based on the ingredients provided. "
-        #           "Please rank the best three recipes based on available ingredients:\n\n"
-        #           f"{recipes_text}")
+            recipes_text += f"{i + 1}. {row['name']} - Ingredients: {row['ingredients_x']}; Steps: {row['steps']}; Categories: {row['tags']}\n"
+
         return recipes_text
     
 
@@ -98,6 +83,7 @@ class CustomDataChatbot:
         memory = ConversationBufferMemory(
             return_messages=True, output_key="answer", input_key="question"
         )
+
         loaded_memory = RunnablePassthrough.assign(
             chat_history=RunnableLambda(memory.load_memory_variables) | itemgetter("history"),
         )
@@ -130,17 +116,6 @@ class CustomDataChatbot:
         # And now we put it all together!
         final_chain = loaded_memory | standalone_question | retrieved_documents | answer
 
-
-
-        # llm = ChatOpenAI(model_name=self.openai_model, temperature=0, streaming=True, openai_api_key = openai_api_key)
-        # chain = (
-        #     {"context": retriever, "question": RunnablePassthrough()}
-        #     | prompt
-        #     | llm
-        #     | StrOutputParser()
-        # )
-
-        # qa_chain = ConversationalRetrievalChain.from_llm(llm, retriever=retriever, memory=memory, verbose=True)
         return final_chain
 
     

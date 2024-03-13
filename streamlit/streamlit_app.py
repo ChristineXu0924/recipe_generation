@@ -14,7 +14,6 @@ from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 
 import numpy as np
 import base64
-import requests
 from PIL import Image
 from io import BytesIO
 from gensim.models import Word2Vec
@@ -25,7 +24,6 @@ import pickle
 import dill
 import config
 import os
-import re
 from chat import CustomDataChatbot
 import ast
 from callback import StreamHandler
@@ -80,18 +78,8 @@ with st.sidebar:
     
 
 
-
 ############# Set up chatbot ################
-client = OpenAI(api_key=openai_api_key)
 
-def generate_response(input_text):
-    response = client.chat.completions.create(
-        model="gpt-3.5-turbo",
-        messages=st.session_state.messages
-    )
-    return response.choices[0].message.content
-
-    
 def retrieve_names(message):
     lines = message.content.split('\n')
     # Extract the recipe names from each line
@@ -104,6 +92,23 @@ def retrieve_info(message, recs):
     out_df = recs[recs['name'].isin(names)]
     return out_df[['name', 'link', 'ingredients_x']]
 
+def categorical_prompt(diet, cuisine, type):
+    # f"Please find 3 recipes that fulfills the requirements:{categorical} from the 30 recipes,
+    #   also considering the ingredients available."
+    diet_p = ''
+    cuisine_p = ''
+    type_p = ''
+
+    if diet is not None:
+        diet_p = f'with {diet} dietary restriction'
+    if cuisine is not None:
+        cuisine_p = f'in {cuisine} cuisine'
+    if type is not None:
+        type_p = f'that are {type}'
+    
+    prompt = f'Fine 3 recipes from the original dataset {type_p} {diet_p} {cuisine_p}. Consider the ingredients available. Include their links and ingredients in the answer'
+    return prompt
+
 
 # if 'results' not in st.session_state:
 #     st.session_state['results'] = None
@@ -111,14 +116,14 @@ def retrieve_info(message, recs):
 
 ################## Enhance Display and Interaction ###################
 
-def display_recipes(recipes_df):
-    """Display recipe names as clickable links with ingredients."""
-    for index, row in recipes_df.iterrows():
-        # Recipe name as clickable link
-        st.markdown(f"[{row['name']}]({row['link']})")
-        # Display ingredients related to the recipe
-        st.markdown(f"Ingredients: {row['ingredients_x']}")
-        st.markdown("---")  # Separator
+# def display_recipes(recipes_df):
+#     """Display recipe names as clickable links with ingredients."""
+#     for index, row in recipes_df.iterrows():
+#         # Recipe name as clickable link
+#         st.markdown(f"[{row['name']}]({row['link']})")
+#         # Display ingredients related to the recipe
+#         st.markdown(f"Ingredients: {row['ingredients_x']}")
+#         st.markdown("---")  # Separator
 
 ################## SideBar and Inputs ###################################
 
@@ -132,15 +137,7 @@ with st.sidebar:
         "---"
         submitted = st.form_submit_button('Save inputs')
 
-if submitted:
-    categorical = str(st.session_state['diet']) + ' '+ str(st.session_state['cuisine']) +' ' + str(st.session_state['type'])
-    st.write(f'Current categorical : {categorical}')
-    
-    response = generate_response(f'Use the provided ingredients to generate a {categorical} recipe. Do not have to use all of them')
-    # Display response
-    st.session_state.messages.append({"role": "assistant", "content": response})
-    st.chat_message("assistant").write(response)
-
+ 
 
 
 ######################### Use input_image/image_reader instead ##########
@@ -160,38 +157,48 @@ if uploaded_file is not None:
 
     if uploaded_file and not openai_api_key:
         st.info("Please add your OpenAI API key to continue.")
-
+    
     # User clicks the button to start processing
     if st.button('Identify Ingredients') and openai_api_key:
-        # Clear existing chat history
-        # st.session_state["messages"] = []
 
         headers = {
             "Authorization": f"Bearer {openai_api_key}",
             "Content-Type": "application/json"
         }
-
-        response = read_image.ingredient_identifier(image_base64, 'streamlit', openai_api_key)
+        with st.spinner('Identifying ingredients..'):
+            response = read_image.ingredient_identifier(image_base64, 'streamlit', openai_api_key)
         ing = json.loads(response['choices'][0]['message']['content'].strip('` \n').strip('json\n'))['items']
         ing_message = 'Looks like we have ' + ', '.join(ing) + ' available.'
         st.session_state['ingredients'] = ing
         st.chat_message("assistant").write(ing_message)
 
         # st.session_state["messages"] = [{"role": "assistant", "content": ing_message}]
-        initial_recs = rec.get_recommend(ing, 30)
+        with st.spinner('Pulling recipes.. It would take about 1 min'):
+            initial_recs = rec.get_recommend(ing, 30)
+            st.session_state['recommends'] = initial_recs
 
-        # st.session_state['results'] = output
-        ing = st.session_state['ingredients']
         CDchatbot = CustomDataChatbot()
         chatbot = CDchatbot.query_llm(initial_recs, openai_api_key)
-        question= f"what is 3 recipe that can be suits best with the available ingredsents: {ing}? return their index as a list."
+        question= f"what are at least 3 recipes that suit best with the available ingredsents: {ing}? Include their links and ingredients in the answer"
         result = chatbot.invoke({"question": question,
-                    'chat_history': []})
-        
-        top_df = retrieve_info(result['answer'], initial_recs)
+                        'chat_history': []})
+        st.chat_message('assistant').write(result['answer'].content)
 
-        display_recipes(top_df)  # Enhanced display function for recipes
         st.session_state['agent'] = chatbot
+
+## Side bar
+if submitted:
+    if 'agent' in st.session_state:
+        categorical = 'Diet: ' + str(st.session_state['diet']) + '; Cuisine: '+ str(st.session_state['cuisine']) +'; Meal type: ' + str(st.session_state['type'])
+        st.write(f'Current choices: {categorical}')
+
+        initial_recs = st.session_state['recommends']
+        chatbot = st.session_state['agent']
+        prompt = categorical_prompt(st.session_state['diet'], st.session_state['cuisine'], st.session_state['type'])
+        response = chatbot.invoke({"question": prompt})
+        pulled_recipe = response['answer']
+        st.chat_message('assistant').write(pulled_recipe.content)
+        st.session_state.messages.append({"role": "assistant", "content": pulled_recipe.content})
 
 prompt = st.chat_input("Further questions")
 if prompt and 'agent' in st.session_state:
@@ -200,15 +207,9 @@ if prompt and 'agent' in st.session_state:
     st.chat_message("user").write(prompt)
 
     with st.chat_message('assistant'):
-        # st_cb = StreamHandler(st.empty())
-        # response = chatbot.invoke(user_query, callbacks=[st_cb])
+
         response = chatbot.invoke({"question": prompt})
         st.write(response['answer'].content)
         st.session_state.messages.append({"role": "assistant", "content": response['answer'].content})
 
-
-
-
-        ##### 
-
-
+    

@@ -6,6 +6,7 @@ TFIDF_ENCODING_PATH = "./streamlit/models/tfidf_encodings.pkl"
 TFIDF_MODEL_PATH = "./streamlit/models/tfidf.pkl"
 W2V_PATH = "./streamlit/models/model_cbow_2.bin"
 
+OPENAI_KEY = "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"
 
 # LINUX_PATH = "/home/jack/projects/whatscooking-deployment/"
 # OS_PATH = "/Users/Jack/Documents/Projects/whatscooking_heroku/"

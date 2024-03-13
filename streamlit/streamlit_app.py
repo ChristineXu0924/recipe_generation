@@ -26,7 +26,6 @@ import config
 import os
 from chat import CustomDataChatbot
 import ast
-from callback import StreamHandler
 
 # st.write(os.getcwd())
 # load in data and models

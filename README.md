@@ -1,8 +1,8 @@
 # UCSD DSC Capstone Project: PicToPlate
-link to static github website: https://christinexu0924.github.io/recipe_retrieval/
+link to github website for details on our project: https://christinexu0924.github.io/recipe_retrieval/
 ### Authors
 Megan Huynh (mlhuynh@ucsd.edu)
-Christine Xu (jix028@ucsd.edu)
+Jiarui(Christine) Xu (jix028@ucsd.edu)
 
 ## Introduction
 The goal of this project is to provide users with a list of recipes and they can cook based and an AI cooking assistant on a user input image of their cooking ingredients. 
@@ -65,6 +65,6 @@ For now, user can insert their own openai API key to play around with the image 
 We utilized preexisting code and models from many sources, including:
 - GPT4 with Vision (https://platform.openai.com/docs/guides/vision)
 - Streamlit app template (https://github.com/dataprofessor/openai-chatbot)
-- LangChain LLMs Framework (https://python.langchain.com/docs/get_started/introduction)
+- LangChain: Framework for LLMs applications (https://python.langchain.com/docs/get_started/introduction)
 
 

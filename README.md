@@ -10,6 +10,27 @@ The goal of this project is to provide users with a list of recipes and they can
 # How this Repo is Constructed
 
 ### Folders
+```
+├── docs
+├── streamlit
+│   ├── data
+│   │   ├── data.py
+│   │   └── full_recipes.pkl
+│   ├── input 
+│   │   ├── read_image.py
+│   └── models
+│   │   ├── model_cbow_2.bin
+│   │   └── tfidf.pkl
+│   │   └── tfidf_encodings.pkl
+│   ├── chat.py
+│   ├── combined.py
+│   ├── config.py
+│   ├── ingredient_parser.py
+│   ├── requirements.txt
+│   ├── streamlit_app.py
+├── build.py
+└── README.md
+```
 - Data: the code for data preprocessing. For now, please download the original data from: https://drive.google.com/drive/folders/1xpnS0K3ecIbtySb0AxIhGMr7YiuI8_JP?usp=drive_link, and paste them into the data folder after cloning this repository. 
 - input_image: contains the code for input image preprocessing. Currenly out of privacy concern, we masked our openai API key.  
 - search: contains the code for our recipe search component

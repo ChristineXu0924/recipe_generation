@@ -24,11 +24,11 @@ class Recommender:
             corpus_sorted.append(doc)
         return corpus_sorted
 
-    def recommendation_results(self, scores, N=15):
+    def recommendation_results(self, scores, N=20):
         top = sorted(range(len(scores)), key=lambda i: scores[i], reverse=True)[:N]
         return self.recipe[self.recipe.index.isin(top)][['name', 'ingredients_x', 'link','steps','tags']]
     
-    def get_recommend(self, in_ing, N=15):
+    def get_recommend(self, in_ing, N=20):
         # in_ing = in_ing.split(", ")
         in_ing = [x.lower() for x in in_ing]
         # corpus = self.get_and_sort_corpus(self.data['ingredients_parsed'])

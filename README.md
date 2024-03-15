@@ -29,7 +29,8 @@ The goal of this project is to provide users with a list of recipes and they can
 │   ├── config.py
 │   ├── ingredient_parser.py
 │   ├── requirements.txt
-│   ├── streamlit_app.py
+│   └── streamlit_app.py
+│
 └── README.md
 ```
 - docs: Source html and style.css code for our static website
@@ -45,7 +46,7 @@ The goal of this project is to provide users with a list of recipes and they can
   - `chat.py`: LangChain chatbot setup
   - `combined.py`: create Recommender object
   - `ingredient_parser.py`: code for data preprocessing (named-entity recognition)
-  - `streamlit_app.py`: Our Pic2Plate recipe retrieval app
+  - `streamlit_app.py`: Our Pic2Plate recipe retrieval app (https://pic2plate.streamlit.app/)
 
 ### Setup
 After cloning the github repo to local repository and installing anaconda, cd into the directory and initiat a conda enviornment with command

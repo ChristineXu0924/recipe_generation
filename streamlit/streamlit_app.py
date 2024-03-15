@@ -216,10 +216,12 @@ if uploaded_file is not None:
         question= f"what are at least 4 recipes that can be made using the available ingredsents: {ing}? Return only the recipe names."
         result = chatbot.invoke({"question": question,
                         'chat_history': []})
-
+        
+        st.write(result['answer'].content)
         top_df = retrieve_info(result['answer'].content, initial_recs)
         message = display_info(top_df)
-
+        st.write(message)
+        
         st.chat_message('assistant').write(message)
         st.session_state.messages.append({"role": "assistant", "content": message})
         st.session_state['agent'] = chatbot

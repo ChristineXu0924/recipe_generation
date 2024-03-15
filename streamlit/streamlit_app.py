@@ -130,12 +130,13 @@ def categorical_prompt(diet, cuisine, type):
 
 
 ################## Enhance Display and Interaction ###################
-def display_info(df, out1):
+def display_info(df):
     message = ""
     for count, (index, row) in enumerate(df.iterrows()):
+        link = 'https://' + row['link']
         # Format current message, assuming out1 contains titles or descriptions
         # and appending the link and ingredients from the DataFrame
-        cur_message = f"**{count+1}. {row['name']}** [Recipe Link]({row['link']})\n\n" \
+        cur_message = f"**{count+1}. {row['name']}** [Recipe Link]({link})\n\n" \
                       f"**Ingredients:** {row['ingredients_x']}\n\n---\n\n"
         # Append the current message to the overall message
         message += cur_message
@@ -166,8 +167,8 @@ with st.sidebar:
 
 
 ######################### Use input_image/image_reader instead ##########
-openai_api_key = st.secrets.db_credentials.openai_key
-# openai_api_key = st.session_state['api_key']
+# openai_api_key = st.secrets.db_credentials.openai_key
+openai_api_key = st.session_state['api_key']
 uploaded_file = st.file_uploader("Upload an image", type=["jpg", "jpeg", "png"])
 
 def image_to_base64(image: Image.Image) -> str:
@@ -212,15 +213,15 @@ if uploaded_file is not None:
 
         CDchatbot = CustomDataChatbot()
         chatbot = CDchatbot.query_llm(initial_recs, openai_api_key)
-        question= f"what are at least 3 recipes that suit best with the available ingredsents: {ing}? Return only the recipe names."
+        question= f"what are at least 4 recipes that can be made using the available ingredsents: {ing}? Return only the recipe names."
         result = chatbot.invoke({"question": question,
                         'chat_history': []})
-        out1 = result['answer'].content.split('\n')
 
         top_df = retrieve_info(result['answer'].content, initial_recs)
-        message = display_info(top_df, out1)
+        message = display_info(top_df)
 
         st.chat_message('assistant').write(message)
+        st.session_state.messages.append({"role": "assistant", "content": message})
         st.session_state['agent'] = chatbot
 
 ## Side bar
@@ -234,10 +235,8 @@ if submitted:
         prompt = categorical_prompt(st.session_state['diet'], st.session_state['cuisine'], st.session_state['type'])
         response = chatbot.invoke({"question": prompt})
 
-        out2 = response['answer'].content.split('\n')
-
         new_df = retrieve_info(response['answer'].content, initial_recs)
-        new_message = display_info(new_df, out2)
+        new_message = display_info(new_df)
         st.chat_message('assistant').write(new_message)
         st.session_state.messages.append({"role": "assistant", "content": new_message})
 

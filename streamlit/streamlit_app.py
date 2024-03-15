@@ -158,6 +158,11 @@ if uploaded_file is not None:
     # Convert the image to base64
     image_base64 = image_to_base64(image)
 
+    # Display image 
+    left, mid, right = st.columns([1,2,1])
+    with mid:
+        st.image(image, width= 300, caption='Uploaded Image.')
+
     if uploaded_file and not openai_api_key:
         st.info("Please add your OpenAI API key to continue.")
     

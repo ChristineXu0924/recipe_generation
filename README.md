@@ -30,7 +30,6 @@ The goal of this project is to provide users with a list of recipes and they can
 │   ├── ingredient_parser.py
 │   ├── requirements.txt
 │   ├── streamlit_app.py
-├── build.py
 └── README.md
 ```
 - docs: Source html and style.css code for our static website

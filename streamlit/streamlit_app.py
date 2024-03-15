@@ -71,11 +71,11 @@ if "messages" not in st.session_state:
 
 #website sidebar, with api_key input and filters/sort
 with st.sidebar:
-    api_key = st.text_input("OpenAI API Key", key="chatbot_api_key", type="password")
+    st.session_state['api_key'] = st.text_input("OpenAI API Key", key="chatbot_api_key", type="password")
     "[Get an OpenAI API key](https://platform.openai.com/account/api-keys)"
     if st.button('Use Provided API Key'):
-        api_key = st.secrets.db_credentials.openai_key
-    openai_api_key = api_key
+        st.session_state['api_key'] = st.secrets.db_credentials.openai_key
+    
 
     
 
@@ -143,6 +143,7 @@ with st.sidebar:
 
 
 ######################### Use input_image/image_reader instead ##########
+openai_api_key = st.session_state.get('api_key', None)
 uploaded_file = st.file_uploader("Upload an image", type=["jpg", "jpeg", "png"])
 
 def image_to_base64(image: Image.Image) -> str:

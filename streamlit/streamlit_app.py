@@ -108,7 +108,7 @@ def categorical_prompt(diet, cuisine, type):
     if type is not None:
         type_p = f'that are {type}'
     
-    prompt = f'Fine 3 recipes from the original dataset {type_p} {diet_p} {cuisine_p}. Consider the ingredients available. Include their links and ingredients in the answer'
+    prompt = f'Fine 3 recipes from the original dataset {type_p} {diet_p} {cuisine_p}. Consider the ingredients available. Include their links and ingredients in separate lines.'
     return prompt
 
 
@@ -187,7 +187,7 @@ if uploaded_file is not None:
 
         CDchatbot = CustomDataChatbot()
         chatbot = CDchatbot.query_llm(initial_recs, openai_api_key)
-        question= f"what are at least 3 recipes that suit best with the available ingredsents: {ing}? Include their links and ingredients in the answer"
+        question= f"what are at least 3 recipes that suit best with the available ingredsents: {ing}? Include their links and ingredients in different lines in the answer"
         result = chatbot.invoke({"question": question,
                         'chat_history': []})
         st.chat_message('assistant').write(result['answer'].content)

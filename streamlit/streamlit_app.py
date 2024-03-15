@@ -143,7 +143,7 @@ with st.sidebar:
 
 
 ######################### Use input_image/image_reader instead ##########
-openai_api_key = st.session_state.get('api_key', None)
+openai_api_key = st.secrets.db_credentials.openai_key
 uploaded_file = st.file_uploader("Upload an image", type=["jpg", "jpeg", "png"])
 
 def image_to_base64(image: Image.Image) -> str:

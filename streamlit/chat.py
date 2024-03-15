@@ -29,7 +29,7 @@ class CustomDataChatbot:
         """Generate a prompt for the LLM with top recipes from the DataFrame."""
         recipes_text = ""
         for i, row in recipes_df.iterrows():
-            recipes_text += f"{i + 1}. {row['name']} - Ingredients: {row['ingredients_x']}; Steps: {row['steps']}; Categories: {row['tags']}\n"
+            recipes_text += f"{i + 1}. {row['name']} (Link: {row['link']}) - Ingredients: {row['ingredients_x']}; Steps: {row['steps']}; Categories: {row['tags']}; \n"
 
         return recipes_text
     

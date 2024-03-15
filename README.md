@@ -4,8 +4,7 @@ Link to github website for details on our project: https://christinexu0924.githu
 Artifact repository: https://github.com/meganhuynh02/artifact-directory-template
 
 ### Authors
-Megan Huynh (mlhuynh@ucsd.edu)
-Jiarui(Christine) Xu (jix028@ucsd.edu)
+Megan Huynh (mlhuynh@ucsd.edu), Jiarui(Christine) Xu (jix028@ucsd.edu), Mentor: Colin Jemmott (cjemmott@ucsd.edu)
 
 ## Introduction
 The goal of this project is to provide users with a list of recipes and they can cook based and an AI cooking assistant on a user input image of their cooking ingredients. 

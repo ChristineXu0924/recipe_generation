@@ -438,14 +438,4 @@ def ingredients_parser(ingredients):
     return ingred_list
 
 
-# if __name__ == "__main__":
-#     recipe_df = pd.read_csv(config.RECIPES_PATH)
-#     recipe_df["ingredients_parsed"] = recipe_df["ingredients_y"].apply(
-#         lambda x: ingredient_parser(x)
-#     )
-
-#     df = recipe_df[["name", "tags","steps", "ingredients_parsed", "ingredients_x", "link"]]
-#     df = df.dropna()
-
-#     df.to_csv(config.PARSED_PATH, index=False)
 

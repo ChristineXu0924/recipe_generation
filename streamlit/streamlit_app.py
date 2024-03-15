@@ -26,6 +26,7 @@ import config
 import os
 from chat import CustomDataChatbot
 import ast
+import re
 
 # st.write(os.getcwd())
 # load in data and models
@@ -82,16 +83,28 @@ with st.sidebar:
 
 ############# Set up chatbot ################
 
-def retrieve_names(message):
-    lines = message.content.split('\n')
-    # Extract the recipe names from each line
-    recipe_names = [line.split('. ', 1)[1] for line in lines if line.strip()]
-    return recipe_names
+def retrieve_names(dishes):
+    dishes_list = dishes.split('\n')
+    cleaned_dishes = []
+
+    # Process each line to extract and clean the dish names
+    for line in dishes_list:
+        # Split the line on the period to remove the initial numbering
+        parts = line.split('.', 1)
+        if len(parts) > 1:
+            # Extract the part after the period
+            dish = parts[1].strip()
+            # Convert to lower case
+            dish = dish.lower()
+            # Remove all non-alphanumeric characters (excluding spaces)
+            dish = re.sub('[^0-9a-zA-Z ]+', '', dish)
+            # Add the cleaned name to the list
+            cleaned_dishes.append(dish.replace(' ', ''))
+    return cleaned_dishes
 
 def retrieve_info(message, recs):
     names = retrieve_names(message)
-    names = [i.lower() for i in names]
-    out_df = recs[recs['name'].isin(names)]
+    out_df = recs[recs['name_pack'].isin(names)]
     return out_df[['name', 'link', 'ingredients_x']]
 
 def categorical_prompt(diet, cuisine, type):
@@ -108,7 +121,7 @@ def categorical_prompt(diet, cuisine, type):
     if type is not None:
         type_p = f'that are {type}'
     
-    prompt = f'Fine 3 recipes from the original dataset {type_p} {diet_p} {cuisine_p}. Consider the ingredients available. Include their links and ingredients in separate lines.'
+    prompt = f'Fine 3 recipes from the original dataset {type_p} {diet_p} {cuisine_p}. Consider the ingredients available. Return only the recipe names.'
     return prompt
 
 
@@ -117,6 +130,16 @@ def categorical_prompt(diet, cuisine, type):
 
 
 ################## Enhance Display and Interaction ###################
+def display_info(df, out1):
+    message = ""
+    for count, (index, row) in enumerate(df.iterrows()):
+        # Format current message, assuming out1 contains titles or descriptions
+        # and appending the link and ingredients from the DataFrame
+        cur_message = f"**{count+1}. {row['name']}** [Recipe Link]({row['link']})\n\n" \
+                      f"**Ingredients:** {row['ingredients_x']}\n\n---\n\n"
+        # Append the current message to the overall message
+        message += cur_message
+    return message
 
 # def display_recipes(recipes_df):
 #     """Display recipe names as clickable links with ingredients."""
@@ -143,7 +166,8 @@ with st.sidebar:
 
 
 ######################### Use input_image/image_reader instead ##########
-openai_api_key = st.secrets.db_credentials.openai_key
+# openai_api_key = st.secrets.db_credentials.openai_key
+openai_api_key = st.session_state['api_key']
 uploaded_file = st.file_uploader("Upload an image", type=["jpg", "jpeg", "png"])
 
 def image_to_base64(image: Image.Image) -> str:
@@ -166,7 +190,7 @@ if uploaded_file is not None:
     if uploaded_file and not openai_api_key:
         st.info("Please add your OpenAI API key to continue.")
     
-    # User clicks the button to start processing
+     # User clicks the button to start processing
     if st.button('Identify Ingredients') and openai_api_key:
 
         headers = {
@@ -183,15 +207,20 @@ if uploaded_file is not None:
         # st.session_state["messages"] = [{"role": "assistant", "content": ing_message}]
         with st.spinner('Pulling recipes.. It would take about 1 min'):
             initial_recs = rec.get_recommend(ing, 30)
+            initial_recs['name_pack'] = initial_recs['name'].str.replace(' ','')
             st.session_state['recommends'] = initial_recs
 
         CDchatbot = CustomDataChatbot()
         chatbot = CDchatbot.query_llm(initial_recs, openai_api_key)
-        question= f"what are at least 3 recipes that suit best with the available ingredsents: {ing}? Include their links and ingredients in different lines in the answer"
+        question= f"what are at least 3 recipes that suit best with the available ingredsents: {ing}? Return only the recipe names."
         result = chatbot.invoke({"question": question,
                         'chat_history': []})
-        st.chat_message('assistant').write(result['answer'].content)
+        out1 = result['answer'].content.split('\n')
 
+        top_df = retrieve_info(result['answer'].content, initial_recs)
+        message = display_info(top_df, out1)
+
+        st.chat_message('assistant').write(message)
         st.session_state['agent'] = chatbot
 
 ## Side bar
@@ -204,9 +233,17 @@ if submitted:
         chatbot = st.session_state['agent']
         prompt = categorical_prompt(st.session_state['diet'], st.session_state['cuisine'], st.session_state['type'])
         response = chatbot.invoke({"question": prompt})
-        pulled_recipe = response['answer']
-        st.chat_message('assistant').write(pulled_recipe.content)
-        st.session_state.messages.append({"role": "assistant", "content": pulled_recipe.content})
+
+        out2 = response['answer'].content.split('\n')
+
+        new_df = retrieve_info(response['answer'].content, initial_recs)
+        new_message = display_info(new_df, out2)
+        st.chat_message('assistant').write(new_message)
+        st.session_state.messages.append({"role": "assistant", "content": new_message})
+
+        # pulled_recipe = response['answer']
+        # st.chat_message('assistant').write(pulled_recipe.content)
+        # st.session_state.messages.append({"role": "assistant", "content": pulled_recipe.content})
 
 prompt = st.chat_input("Further questions")
 if prompt and 'agent' in st.session_state:

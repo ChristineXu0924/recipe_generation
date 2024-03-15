@@ -25,17 +25,17 @@ class CustomDataChatbot:
         self.openai_model = "gpt-3.5-turbo"
 
 
-    def create_prompt(self, recipes_df, num_recipes=30):
+    def create_prompt(self, recipes_df, num_recipes=25):
         """Generate a prompt for the LLM with top recipes from the DataFrame."""
         recipes_text = ""
         for i, row in recipes_df.iterrows():
-            recipes_text += f"{i + 1}. {row['name']} (Link: {row['link']}) - Ingredients: {row['ingredients_x']}; Steps: {row['steps']}; Categories: {row['tags']}; \n"
+            recipes_text += f"{i + 1}. {row['name']}  - Ingredients: {row['ingredients_x']}; Steps: {row['steps']}; Categories: {row['tags']}; \n"
 
         return recipes_text
     
 
     @st.spinner('Analyzing documents..')
-    def query_llm(self, recs, openai_api_key, num_recipes=30):
+    def query_llm(self, recs, openai_api_key, num_recipes=25):
         # Generate the prompt using the provided recipes
         context = self.create_prompt(recs, num_recipes)
         vectorstore = faiss.FAISS.from_texts(

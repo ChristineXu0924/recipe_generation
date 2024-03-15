@@ -217,10 +217,10 @@ if uploaded_file is not None:
         result = chatbot.invoke({"question": question,
                         'chat_history': []})
         
-        st.write(result['answer'].content)
+        # st.write(result['answer'].content)
         top_df = retrieve_info(result['answer'].content, initial_recs)
         message = display_info(top_df)
-        st.write(message)
+        # st.write(message)
         
         st.chat_message('assistant').write(message)
         st.session_state.messages.append({"role": "assistant", "content": message})

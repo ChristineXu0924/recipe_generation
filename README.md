@@ -1,3 +1,14 @@
+---
+title: Pic2plate
+emoji: 👀
+colorFrom: purple
+colorTo: pink
+sdk: streamlit
+sdk_version: 1.32.2
+app_file: streamlit/streamlit_app.py
+pinned: false
+--- 
+
 # UCSD DSC Capstone Project: PicToPlate
 Link to github website for details on our project: https://christinexu0924.github.io/recipe_retrieval/
 

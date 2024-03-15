@@ -1,6 +1,6 @@
 ---
 title: Pic2plate
-emoji: 👀
+emoji: 🍰
 colorFrom: purple
 colorTo: pink
 sdk: streamlit
